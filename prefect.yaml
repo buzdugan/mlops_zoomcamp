@@ -45,6 +45,17 @@ deployments:
     name: mlops_zoomcamp_pool
 
 # SCORING FLOWS
+# scoring.py model from the cloud
+- name: "claims_status_scoring"
+  description: "Local version of claims_status_scoring"
+  schedule:
+    cron: "00 06 * * *"
+    timezone: "Europe/London"
+  flow_name: "claim_status_scoring_flow"
+  entrypoint: "scoring.py:score_claim_status"
+  work_pool:
+    name: mlops_zoomcamp_pool
+
 # scoring.py running locally
 - name: "claims_status_scoring_local"
   description: "Local version of claims_status_scoring"
