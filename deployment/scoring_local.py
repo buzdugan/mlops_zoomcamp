@@ -10,39 +10,14 @@ import mlflow
 from mlflow.tracking import MlflowClient
 from prefect import flow, task
 
-
-TARGET = 'claim_status'
+import sys
+sys.path.append("src")
+import utils
 
 
 @task(name="read_data", retries=3, retry_delay_seconds=2)
-def read_dataframe(file_path):
-    df = pd.read_csv(file_path)
-    
-    # Get categ and numeric columns
-    categ_cols = [c for c in df.columns if df[c].dtype == 'object']
-    num_cols = [c for c in df.columns if c not in categ_cols]
-    num_cols.remove(TARGET)
-
-    for column in categ_cols:
-        df[column] = df[column].astype('category')
-    categ_cols.remove('policy_id')
-
-    # Convert 'is_' columns to integer values
-    is_cols = [c for c in df.columns if c.startswith('is_')]
-    for column in is_cols:
-        df[column] = df[column].map(dict(Yes=1, No=0))
-        df[column] = df[column].astype('int16')
-        num_cols.append(column)
-        categ_cols.remove(column)
-
-    # TODO: Keep all the columns for modelling
-    # Remove "is_" columns for faster training
-    for column in is_cols:
-        num_cols.remove(column)
-
-    df = df[num_cols + categ_cols + [TARGET]]
-
-    return df
+def read_dataframe(file_path, target, quick_train):
+    return utils.read_dataframe(file_path, target, quick_train)
 
 
 @task(name="get_production_model", log_prints=True)
@@ -92,24 +67,27 @@ def apply_model(model, run_id, df, output_path):
 @flow(name="claim_status_scoring_flow_local", log_prints=True)
 def score_claim_status():
 
-    mlflow_tracking_uri = "http://127.0.0.1:5000"
+    config = utils.load_config(file_path="config.yaml")
+    mlflow_tracking_uri = config['deployment']['local']['mlflow_tracking_uri']
+    experiment_name = config['experiment_name']
+    model_name = config['model_name']
+    target = config['target']
+    quick_train = config['quick_train']
+
     print("Connecting to mlflow registry server...")
     client = MlflowClient(mlflow_tracking_uri)
-
-    experiment_name = "claims_status"
-    model_name = f"{experiment_name}_classifier"
     experiment_id = client.get_experiment_by_name(experiment_name).experiment_id
     print(f"Experiment ID for {experiment_name}: {experiment_id}")
 
     yesterday = datetime.now() - timedelta(1)
     yesterday_str = yesterday.strftime('%Y_%m_%d')
-    input_file_path = Path("data/insurance_claims_data.csv")
+    input_file_path = Path(config['modelling_data_path'])
     output_file_path = Path(f"data/scored_dataset_{yesterday_str}.csv")
 
     print(f"Reading data from {input_file_path}...")
-    df = read_dataframe(input_file_path) 
+    df = read_dataframe(input_file_path, target, quick_train)
     # Sample the data for scoring
-    df = df.sample(n=1000, random_state=42).drop(columns=['claim_status'])
+    df = df.sample(n=1000, random_state=42).drop(columns=[target])
     
     print(f"Getting production model from registry...")
     run_id, model_id = get_prod_model(client, model_name)

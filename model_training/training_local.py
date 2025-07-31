@@ -19,7 +19,7 @@ sys.path.append("src")
 import utils
 
 
-# @task(name="mlflow_initialization")
+@task(name="mlflow_initialization")
 def init_mlflow(mlflow_tracking_uri, mlflow_experiment_name):
     client = MlflowClient(mlflow_tracking_uri)
 
@@ -36,38 +36,12 @@ def init_mlflow(mlflow_tracking_uri, mlflow_experiment_name):
     return client
 
 
-# @task(name="read_data", retries=3, retry_delay_seconds=2)
+@task(name="read_data", retries=3, retry_delay_seconds=2)
 def read_dataframe(file_path, target, quick_train):
-    df = pd.read_csv(file_path)
-    
-    # Get categ and numeric columns
-    categ_cols = [c for c in df.columns if df[c].dtype == 'object']
-    num_cols = [c for c in df.columns if c not in categ_cols]
-    num_cols.remove(target)
-
-    for column in categ_cols:
-        df[column] = df[column].astype('category')
-    categ_cols.remove('policy_id')
-
-    # Convert 'is_' columns to integer values
-    is_cols = [c for c in df.columns if c.startswith('is_')]
-    for column in is_cols:
-        df[column] = df[column].map(dict(Yes=1, No=0))
-        df[column] = df[column].astype('int16')
-        num_cols.append(column)
-        categ_cols.remove(column)
-
-    if quick_train:
-        for column in is_cols:
-            num_cols.remove(column)
-        df = df.sample(n=10000, random_state=42)
-
-    df = df[num_cols + categ_cols + [target]]
-
-    return df
+    return utils.read_dataframe(file_path, target, quick_train)
 
 
-# @task(name="split_data")
+@task(name="split_data")
 def create_train_test_datasets(df, target):
     X, y = df.drop(target, axis=1), df[[target]]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -75,7 +49,7 @@ def create_train_test_datasets(df, target):
     return X_train, X_test, y_train, y_test
 
 
-# @task(name="hyperparameter_tuning", log_prints=True)
+@task(name="hyperparameter_tuning", log_prints=True)
 def hyperparameter_tuning(X_train, y_train, eval_set, eval_metrics):
     # Stratified cross-validation object
     stratified_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
@@ -109,7 +83,7 @@ def hyperparameter_tuning(X_train, y_train, eval_set, eval_metrics):
     return parameter_gridSearch.best_params_
 
 
-# @task(name="train_model", log_prints=True)
+@task(name="train_model", log_prints=True)
 def train_model(X_train, y_train, X_test, y_test, artifact_path, reference_data_path):
     with mlflow.start_run() as run:
         mlflow.set_tag("model", "xgboost")
@@ -161,7 +135,7 @@ def train_model(X_train, y_train, X_test, y_test, artifact_path, reference_data_
         return run.info.run_id
 
 
-# @task(name="register_model", log_prints=True)
+@task(name="register_model", log_prints=True)
 def register_model(run_id, model_name, artifact_path):    
     mlflow.register_model(
         model_uri=f"runs:/{run_id}/{artifact_path}",
@@ -169,7 +143,7 @@ def register_model(run_id, model_name, artifact_path):
     )
 
 
-# @task(name="productionize_model", log_prints=True)
+@task(name="productionize_model", log_prints=True)
 def stage_model(client, run_id, model_name):
     # Get all registered models for model name
     reg_models = client.search_registered_models(
@@ -220,7 +194,7 @@ def stage_model(client, run_id, model_name):
             print(f'Archived version {trained_model_version} of {model_name} model.')
     
 
-# @flow(name="claim_status_classification_flow_local")
+@flow(name="claim_status_classification_flow_local")
 def main_flow():
 
     config = utils.load_config(file_path="config.yaml")
