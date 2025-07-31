@@ -182,6 +182,11 @@ pip3 install mlflow boto3 psycopg2-binary
 You will need to create and provide AWS Access Key and Secret Access Key to configure the instance.
 It is recommended to have IAM roles with access key rather than root one, so I've created the IAM Role MLOpsPipelineRole.
 I've then updated the IAM Role for EC2 instance with AmazonS3FullAccess and AmazonRDSFullAccess to be able to read / write from the S3 Bucket and RDS database. These permissions could be restricted further from full access.
+```bash
+aws configure
+```
+Check to see that you have access to the S3 bucket by running `aws s3 ls`.
+
 
 ## Setup the Local Environment
 ### Create AWS profile 
