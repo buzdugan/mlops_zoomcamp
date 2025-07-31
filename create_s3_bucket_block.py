@@ -12,7 +12,7 @@ def create_aws_creds_block():
 def create_s3_bucket_block():
     aws_creds = AwsCredentials.load("mlops-aws-creds")
     my_s3_bucket_obj = S3Bucket(
-        bucket_name="mlflow-artifacts-remote-hiscox", 
+        bucket_name="mlflow-artifacts-remote-claims", 
         credentials=aws_creds
     )
     my_s3_bucket_obj.save(name="mlops-s3-bucket", overwrite=True)
