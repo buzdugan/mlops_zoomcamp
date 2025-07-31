@@ -47,7 +47,7 @@ deployments:
 # SCORING FLOWS
 # scoring.py model from the cloud
 - name: "claims_status_scoring"
-  description: "Local version of claims_status_scoring"
+  description: "Cloud version of claims_status_scoring"
   schedule:
     cron: "00 06 * * *"
     timezone: "Europe/London"
