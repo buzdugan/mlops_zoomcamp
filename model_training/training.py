@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -223,6 +224,7 @@ def stage_model(client, run_id, model_name):
 @flow(name="claim_status_classification_flow", log_prints=True)
 def main_flow():
 
+    os.environ["AWS_PROFILE"] = "mlops-user"  # AWS profile name
     tracking_server_host = "ec2-13-221-77-96.compute-1.amazonaws.com" # replace with public DNS of EC2 instance
     mlflow_tracking_uri = f"http://{tracking_server_host}:5000"
 
