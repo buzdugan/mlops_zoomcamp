@@ -1,3 +1,6 @@
+# VS Code related
+.vscode/
+
 # mlflow artifacts locally
 # models/
 mlruns/
