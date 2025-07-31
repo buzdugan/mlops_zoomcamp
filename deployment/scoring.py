@@ -93,7 +93,7 @@ def apply_model(model, run_id, df, output_path):
 @flow(name="claim_status_scoring_flow_local", log_prints=True)
 def score_claim_status():
 
-    tracking_server_host = "<ec2_public_dns>" # replace with your public DNS of the EC2 instance
+    tracking_server_host = "ec2-13-221-77-96.compute-1.amazonaws.com" # replace with public DNS of EC2 instance
     mlflow_tracking_uri = f"http://{tracking_server_host}:5000"
     print("Connecting to mlflow registry server...")
     client = MlflowClient(mlflow_tracking_uri)
