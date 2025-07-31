@@ -220,7 +220,7 @@ def stage_model(client, run_id, model_name):
             print(f'Archived version {trained_model_version} of {model_name} model.')
     
 
-@flow(name="claim_status_classification_flow_local")
+@flow(name="claim_status_classification_flow", log_prints=True)
 def main_flow():
 
     tracking_server_host = "ec2-13-221-77-96.compute-1.amazonaws.com" # replace with public DNS of EC2 instance

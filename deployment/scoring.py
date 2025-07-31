@@ -90,7 +90,7 @@ def apply_model(model, run_id, df, output_path):
     print(df.head(3))
 
 
-@flow(name="claim_status_scoring_flow_local", log_prints=True)
+@flow(name="claim_status_scoring_flow", log_prints=True)
 def score_claim_status():
 
     tracking_server_host = "ec2-13-221-77-96.compute-1.amazonaws.com" # replace with public DNS of EC2 instance
