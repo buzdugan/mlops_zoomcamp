@@ -16,11 +16,12 @@ from mlflow.tracking import MlflowClient
 from prefect import flow, task
 from prefect_aws import S3Bucket
 
+import sys
+sys.path.append("src")
+import utils
 
-TARGET = 'claim_status'
 
-
-@task(name="mlflow_initialization")
+# @task(name="mlflow_initialization")
 def init_mlflow(mlflow_tracking_uri, mlflow_experiment_name):
     client = MlflowClient(mlflow_tracking_uri)
 
@@ -37,46 +38,20 @@ def init_mlflow(mlflow_tracking_uri, mlflow_experiment_name):
     return client
 
 
-@task(name="read_data", retries=3, retry_delay_seconds=2)
-def read_dataframe(file_path):
-    df = pd.read_csv(file_path)
-    
-    # Get categ and numeric columns
-    categ_cols = [c for c in df.columns if df[c].dtype == 'object']
-    num_cols = [c for c in df.columns if c not in categ_cols]
-    num_cols.remove(TARGET)
-
-    for column in categ_cols:
-        df[column] = df[column].astype('category')
-    categ_cols.remove('policy_id')
-
-    # Convert 'is_' columns to integer values
-    is_cols = [c for c in df.columns if c.startswith('is_')]
-    for column in is_cols:
-        df[column] = df[column].map(dict(Yes=1, No=0))
-        df[column] = df[column].astype('int16')
-        num_cols.append(column)
-        categ_cols.remove(column)
-
-    # TODO: Keep all the columns for modelling
-    # Remove "is_" columns for faster training
-    for column in is_cols:
-        num_cols.remove(column)
-
-    df = df[num_cols + categ_cols + [TARGET]]
-
-    return df
+# @task(name="read_data", retries=3, retry_delay_seconds=2)
+def read_dataframe(file_path, target, quick_train):
+    return utils.read_dataframe(file_path, target, quick_train)
 
 
-@task(name="split_data")
-def create_train_test_datasets(df):
-    X, y = df.drop(TARGET, axis=1), df[[TARGET]]
+# @task(name="split_data")
+def create_train_test_datasets(df, target):
+    X, y = df.drop(target, axis=1), df[[target]]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     return X_train, X_test, y_train, y_test
 
 
-@task(name="hyperparameter_tuning", log_prints=True)
+# @task(name="hyperparameter_tuning", log_prints=True)
 def hyperparameter_tuning(X_train, y_train, eval_set, eval_metrics):
     # Stratified cross-validation object
     stratified_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
@@ -110,8 +85,8 @@ def hyperparameter_tuning(X_train, y_train, eval_set, eval_metrics):
     return parameter_gridSearch.best_params_
 
 
-@task(name="train_model", log_prints=True)
-def train_model(X_train, y_train, X_test, y_test, artifact_path):
+# @task(name="train_model", log_prints=True)
+def train_model(X_train, y_train, X_test, y_test, artifact_path, reference_data_path):
     with mlflow.start_run() as run:
         mlflow.set_tag("model", "xgboost")
 
@@ -157,12 +132,12 @@ def train_model(X_train, y_train, X_test, y_test, artifact_path):
         print("Saving reference data for model monitoring...")
         val_data = pd.concat([X_test, y_test], axis=1)
         val_data['predicted_claim_status'] = test_class_preds
-        val_data.to_parquet("data/reference.parquet")
+        val_data.to_parquet(reference_data_path)
 
         return run.info.run_id
 
 
-@task(name="register_model", log_prints=True)
+# @task(name="register_model", log_prints=True)
 def register_model(run_id, model_name, artifact_path):    
     mlflow.register_model(
         model_uri=f"runs:/{run_id}/{artifact_path}",
@@ -170,7 +145,7 @@ def register_model(run_id, model_name, artifact_path):
     )
 
 
-@task(name="productionize_model", log_prints=True)
+# @task(name="productionize_model", log_prints=True)
 def stage_model(client, run_id, model_name):
     # Get all registered models for model name
     reg_models = client.search_registered_models(
@@ -221,30 +196,31 @@ def stage_model(client, run_id, model_name):
             print(f'Archived version {trained_model_version} of {model_name} model.')
     
 
-@flow(name="claim_status_classification_flow", log_prints=True)
+# @flow(name="claim_status_classification_flow", log_prints=True)
 def main_flow():
 
-    os.environ["AWS_PROFILE"] = "mlops-user"  # AWS profile name
-    tracking_server_host = "ec2-13-221-77-96.compute-1.amazonaws.com" # replace with public DNS of EC2 instance
-    mlflow_tracking_uri = f"http://{tracking_server_host}:5000"
+    config = utils.load_config(file_path="config.yaml")
+    mlflow_tracking_uri = config['deployment']['cloud']['mlflow_tracking_uri']
+    experiment_name = config['experiment_name']
+    model_name = config['model_name']
+    artifact_path = config['artifact_path']
+    file_path = Path(config['modelling_data_path'])
+    reference_data_path = Path(config['reference_data_path'])
+    target = config['target']
+    quick_train = config['quick_train']
 
+    os.environ["AWS_PROFILE"] = "mlops-user"  # AWS profile name
     s3_bucket_block = S3Bucket.load("mlops-s3-bucket")
     s3_bucket_block.download_folder_to_path(from_folder="data", to_folder="data")
 
-    experiment_name = "claims_status"
-    model_name = f"{experiment_name}_classifier"
-    artifact_path = "models_mlflow"
-    file_path = Path("data/insurance_claims_data.csv")
-
-    print("Connecting to mlflow tracking server...")
     client = init_mlflow(mlflow_tracking_uri, experiment_name)
     print("Connected to mlflow tracking server...")
 
-    df = read_dataframe(file_path)
-    X_train, X_test, y_train, y_test = create_train_test_datasets(df)
+    df = read_dataframe(file_path, target, quick_train)
+    X_train, X_test, y_train, y_test = create_train_test_datasets(df, target)
 
     print("Model training starting...")
-    run_id = train_model(X_train, y_train, X_test, y_test, artifact_path)
+    run_id = train_model(X_train, y_train, X_test, y_test, artifact_path, reference_data_path)
     
     print(f"Registering model {model_name} with run_id: {run_id}.")
     register_model(run_id, model_name, artifact_path)
@@ -256,9 +232,3 @@ def main_flow():
 
 if __name__ == "__main__":
     main_flow()
-
-
-
-
-
-
