@@ -82,7 +82,8 @@ def score_claim_status():
     yesterday = datetime.now() - timedelta(1)
     yesterday_str = yesterday.strftime('%Y_%m_%d')
     input_file_path = Path(config['modelling_data_path'])
-    output_file_path = Path(f"data/scored_dataset_{yesterday_str}.csv")
+    scored_data_path_prefix = Path(config['scored_data_path_prefix'])
+    output_file_path = Path(f"{scored_data_path_prefix}_{yesterday_str}.csv")
 
     print(f"Reading data from {input_file_path}...")
     df = read_dataframe(input_file_path, target, quick_train)

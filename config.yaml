@@ -5,7 +5,13 @@ artifact_path: "models_mlflow"
 
 modelling_data_path: "data/insurance_claims_data.csv"
 reference_data_path: "data/reference.parquet"
+scored_data_path_prefix: "data/scored_dataset"
 target: "claim_status"
+
+bucket_name: "mlflow-artifacts-remote-claims"
+prefect_block_aws: "mlops-aws-creds"
+prefect_block_s3: "mlops-s3-bucket"
+profile_name: "mlops-user"
 
 deployment:
   local:
