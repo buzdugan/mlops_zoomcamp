@@ -8,6 +8,9 @@ mlruns/
 mlflow.db
 artifacts_aws/
 
+# scored data
+data/scored_*
+
 # notebook checkpoints
 .ipynb_checkpoints
 
@@ -19,3 +22,5 @@ __pycache__
 
 # sketch files
 *sketch*
+# config files
+config.json
