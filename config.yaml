@@ -1,0 +1,17 @@
+# Common configuration for both local and cloud deployments
+experiment_name: "claims_status"
+model_name: "claims_status_classifier"
+artifact_path: "models_mlflow"
+
+modelling_data_path: "data/insurance_claims_data.csv"
+reference_data_path: "data/reference.parquet"
+target: "claim_status"
+
+deployment:
+  local:
+    mlflow_tracking_uri: "http://127.0.0.1:5000"
+  cloud:
+    mlflow_tracking_uri: "http://ec2-13-221-77-96.compute-1.amazonaws.com:5000"
+
+# TODO: set to False for final training
+quick_train: True
