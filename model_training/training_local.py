@@ -12,13 +12,13 @@ from sklearn.model_selection import train_test_split, RandomizedSearchCV, Strati
 
 import mlflow
 from mlflow.tracking import MlflowClient
-# from prefect import flow, task
-# from prefect_aws import S3Bucket
+from prefect import flow, task
+
 
 TARGET = 'claim_status'
 
 
-#@task(name="mlflow_initialization")
+@task(name="mlflow_initialization")
 def init_mlflow(mlflow_tracking_uri, mlflow_experiment_name):
     client = MlflowClient(mlflow_tracking_uri)
 
@@ -35,7 +35,7 @@ def init_mlflow(mlflow_tracking_uri, mlflow_experiment_name):
     return client
 
 
-#@task(name="read_data", retries=3, retry_delay_seconds=2)
+@task(name="read_data", retries=3, retry_delay_seconds=2)
 def read_dataframe(file_path):
     df = pd.read_csv(file_path)
     
@@ -66,7 +66,7 @@ def read_dataframe(file_path):
     return df
 
 
-#@task(name="split_data")
+@task(name="split_data")
 def create_train_test_datasets(df):
     X, y = df.drop(TARGET, axis=1), df[[TARGET]]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -74,7 +74,7 @@ def create_train_test_datasets(df):
     return X_train, X_test, y_train, y_test
 
 
-#@task(name="hyperparameter_tuning", log_prints=True)
+@task(name="hyperparameter_tuning", log_prints=True)
 def hyperparameter_tuning(X_train, y_train, eval_set, eval_metrics):
     # Stratified cross-validation object
     stratified_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
@@ -108,7 +108,7 @@ def hyperparameter_tuning(X_train, y_train, eval_set, eval_metrics):
     return parameter_gridSearch.best_params_
 
 
-#@task(name="train_model", log_prints=True)
+@task(name="train_model", log_prints=True)
 def train_model(X_train, y_train, X_test, y_test, artifact_path):
     with mlflow.start_run() as run:
         mlflow.set_tag("model", "xgboost")
@@ -160,7 +160,7 @@ def train_model(X_train, y_train, X_test, y_test, artifact_path):
         return run.info.run_id
 
 
-#@task(name="register_model", log_prints=True)
+@task(name="register_model", log_prints=True)
 def register_model(run_id, model_name, artifact_path):    
     mlflow.register_model(
         model_uri=f"runs:/{run_id}/{artifact_path}",
@@ -168,7 +168,7 @@ def register_model(run_id, model_name, artifact_path):
     )
 
 
-#@task(name="productionize_model", log_prints=True)
+@task(name="productionize_model", log_prints=True)
 def stage_model(client, run_id, model_name):
     # Get all registered models for model name
     reg_models = client.search_registered_models(
@@ -219,7 +219,7 @@ def stage_model(client, run_id, model_name):
             print(f'Archived version {trained_model_version} of {model_name} model.')
     
 
-#@flow(name="claim_status_classification_flow_local")
+@flow(name="claim_status_classification_flow_local")
 def main_flow():
 
     mlflow_tracking_uri = "http://127.0.0.1:5000" # run locally
