@@ -22,6 +22,17 @@ pull:
 # the deployments section allows you to provide configuration for deploying flows
 deployments:
 # TRAINING FLOWS
+# training.py in the cloud
+- name: "claims_status_classification"
+  description: "Cloud version of claims_status_classification"
+  schedule:
+    cron: "00 06 2 * *"
+    timezone: "Europe/London"
+  flow_name: "claim_status_classification_flow"
+  entrypoint: "training.py:main_flow"
+  work_pool:
+    name: mlops_zoomcamp_pool
+
 # training_local.py running locally
 - name: "claims_status_classification_local"
   description: "Local version of claims_status_classification_local"
