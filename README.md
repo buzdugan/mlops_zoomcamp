@@ -119,3 +119,19 @@ This will create a new model that will be compared to the existing one and the w
 After you've run the training deployment, push the **mlartifacts** folder that got generated to the repo. 
 This is because Prefect pulls the code from the github repo and needs all the data and artifacts there in order to find the model for scoring.
 
+
+## Create and Run the Scoring Deployment
+```bash
+prefect deploy deployment/scoring_local.py:score_claim_status -n claims_status_scoring_local -p mlops_zoomcamp_pool
+prefect worker start -p mlops_zoomcamp_pool
+```
+
+Open new terminal and activate the virtual environment.
+```bash
+pipenv shell
+prefect deployment run 'claim_status_scoring_flow_local/claims_status_scoring_local'
+```
+<p align="center">
+  <img width="90%" src="images/prefect_server_scoring_local.png" alt="Prefect scoring_local run">
+</p>
+At this point the flow for scoring will run, and it will create a new datasets scored_dataset_<today_date>.csv inside the temporary storage in Prefect. 
