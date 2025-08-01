@@ -212,7 +212,7 @@ async def batch_monitoring_backfill():
 					curr, i, unseen_df, reference_data, input_file_path, target, quick_train, prediction
 					)
 
-			if result['metrics'][0]['value'] >= 0.0:
+			if result['metrics'][0]['value'] >= 0.5:
 				print("Drift detected, retraining model...")
 				
 				try:
@@ -239,7 +239,7 @@ async def batch_monitoring_backfill():
 
 	# Clean up the pulled repo
 	repo_path = "mlops_zoomcamp-main"
-	if repo_path.exists() and dirpath.is_dir():
+	if repo_path.exists() and repo_path.is_dir():
 		shutil.rmtree(repo_path)
 
 
