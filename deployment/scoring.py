@@ -16,12 +16,12 @@ sys.path.append("src")
 import utils
 
 
-# @task(name="read_data", retries=3, retry_delay_seconds=2)
+@task(name="read_data", retries=3, retry_delay_seconds=2)
 def read_dataframe(file_path, target, quick_train):
     return utils.read_dataframe(file_path, target, quick_train)
 
 
-# @task(name="get_production_model", log_prints=True)
+@task(name="get_production_model", log_prints=True)
 def get_prod_model(client, model_name):
     # Get all registered models for model name
     reg_models = client.search_registered_models(
@@ -45,7 +45,7 @@ def get_prod_model(client, model_name):
         print(f"No production model found for {model_name}.")
 
 
-# @task(name="load_model", log_prints=True)
+@task(name="load_model", log_prints=True)
 def load_model(model_id, experiment_id, bucket_name):
     prod_model = f's3://{bucket_name}/{experiment_id}/models/{model_id}/artifacts/'
 
@@ -54,7 +54,7 @@ def load_model(model_id, experiment_id, bucket_name):
     return model
 
 
-# @task(name="apply_model", log_prints=True)
+@task(name="apply_model", log_prints=True)
 def apply_model(model, run_id, df, output_path):
 
     df['predicted_claim_status'] = model.predict(df)
@@ -64,7 +64,7 @@ def apply_model(model, run_id, df, output_path):
     df.to_csv(output_path, index=False)
 
 
-# @flow(name="claim_status_scoring_flow", log_prints=True)
+@flow(name="claim_status_scoring_flow", log_prints=True)
 def score_claim_status():
 
     config = utils.load_config(file_path="config.yaml")
