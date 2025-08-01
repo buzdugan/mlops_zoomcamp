@@ -13,10 +13,12 @@ from prefect import flow, task
 from prefect_aws import S3Bucket
 from scipy import stats
 from sklearn.datasets import *
-from sklearn.metrics import (accuracy_score, average_precision_score,
-                             roc_auc_score)
-from sklearn.model_selection import (RandomizedSearchCV, StratifiedKFold,
-                                     train_test_split)
+from sklearn.metrics import accuracy_score, average_precision_score, roc_auc_score
+from sklearn.model_selection import (
+    RandomizedSearchCV,
+    StratifiedKFold,
+    train_test_split,
+)
 
 sys.path.append("src")
 import utils
@@ -47,7 +49,9 @@ def read_dataframe(file_path, target, quick_train):
 @task(name="split_data")
 def create_train_test_datasets(df, target):
     X, y = df.drop(target, axis=1), df[[target]]
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
 
     return X_train, X_test, y_train, y_test
 
@@ -60,29 +64,27 @@ def hyperparameter_tuning(X_train, y_train, eval_set, eval_metrics):
     # Randomized search for hyperparameter tuning
     parameter_gridSearch = RandomizedSearchCV(
         estimator=xgb.XGBClassifier(
-        objective='binary:logistic',
-        eval_metric=eval_metrics,
-        early_stopping_rounds=15,
-        enable_categorical=True,
+            objective='binary:logistic',
+            eval_metric=eval_metrics,
+            early_stopping_rounds=15,
+            enable_categorical=True,
         ),
-
         param_distributions={
-        'n_estimators': stats.randint(50, 500),
-        'learning_rate': stats.uniform(0.01, 0.75),
-        'subsample': stats.uniform(0.25, 0.75),
-        'max_depth': stats.randint(1, 8),
-        'colsample_bytree': stats.uniform(0.1, 0.75),
-        'min_child_weight': [1, 3, 5, 7, 9],
+            'n_estimators': stats.randint(50, 500),
+            'learning_rate': stats.uniform(0.01, 0.75),
+            'subsample': stats.uniform(0.25, 0.75),
+            'max_depth': stats.randint(1, 8),
+            'colsample_bytree': stats.uniform(0.1, 0.75),
+            'min_child_weight': [1, 3, 5, 7, 9],
         },
-
         cv=stratified_cv,
         n_iter=5,
         verbose=False,
         scoring='average_precision',  # aucpr
     )
-    
+
     parameter_gridSearch.fit(X_train, y_train, eval_set=eval_set, verbose=False)
-    
+
     return parameter_gridSearch.best_params_
 
 
@@ -104,8 +106,8 @@ def train_model(X_train, y_train, X_test, y_test, artifact_path, reference_data_
             eval_metric=eval_metrics,
             early_stopping_rounds=15,
             enable_categorical=True,
-            **best_params
-            )
+            **best_params,
+        )
         model.fit(X_train, y_train, eval_set=eval_set, verbose=False)
 
         # Model evaluation
@@ -113,7 +115,7 @@ def train_model(X_train, y_train, X_test, y_test, artifact_path, reference_data_
         test_class_preds = model.predict(X_test)
         train_prob_preds = model.predict_proba(X_train)[:, 1]
         test_prob_preds = model.predict_proba(X_test)[:, 1]
-        
+
         metrics = {
             "train_roc": roc_auc_score(y_train, train_prob_preds),
             "test_roc": roc_auc_score(y_test, test_prob_preds),
@@ -129,7 +131,7 @@ def train_model(X_train, y_train, X_test, y_test, artifact_path, reference_data_
         # Log the model
         mlflow.xgboost.log_model(model, artifact_path=artifact_path)
 
-         # Save reference data for model monitoring
+        # Save reference data for model monitoring
         print("Saving reference data for model monitoring...")
         val_data = pd.concat([X_test, y_test], axis=1)
         val_data['predicted_claim_status'] = test_class_preds
@@ -139,19 +141,14 @@ def train_model(X_train, y_train, X_test, y_test, artifact_path, reference_data_
 
 
 @task(name="register_model", log_prints=True)
-def register_model(run_id, model_name, artifact_path):    
-    mlflow.register_model(
-        model_uri=f"runs:/{run_id}/{artifact_path}",
-        name=model_name
-    )
+def register_model(run_id, model_name, artifact_path):
+    mlflow.register_model(model_uri=f"runs:/{run_id}/{artifact_path}", name=model_name)
 
 
 @task(name="productionize_model", log_prints=True)
 def stage_model(client, run_id, model_name):
     # Get all registered models for model name
-    reg_models = client.search_registered_models(
-        filter_string=f"name='{model_name}'"
-    )
+    reg_models = client.search_registered_models(filter_string=f"name='{model_name}'")
 
     # Get trained model version and production model run id
     prod_model_run_id = None
@@ -166,11 +163,11 @@ def stage_model(client, run_id, model_name):
     # If no model in production, promote the trained model to production
     if not prod_model_run_id:
         client.transition_model_version_stage(
-                name=model_name,
-                version=trained_model_version,
-                stage="Production",
-                archive_existing_versions=True,
-            )
+            name=model_name,
+            version=trained_model_version,
+            stage="Production",
+            archive_existing_versions=True,
+        )
         print(f'Productionized version {trained_model_version} of {model_name} model.')
     else:
         # Get the metrics for production and trained models
@@ -187,7 +184,9 @@ def stage_model(client, run_id, model_name):
                 stage="Production",
                 archive_existing_versions=True,
             )
-            print(f'Productionized version {trained_model_version} of {model_name} model.')
+            print(
+                f'Productionized version {trained_model_version} of {model_name} model.'
+            )
         else:
             client.transition_model_version_stage(
                 name=model_name,
@@ -195,7 +194,7 @@ def stage_model(client, run_id, model_name):
                 stage="Archived",
             )
             print(f'Archived version {trained_model_version} of {model_name} model.')
-    
+
 
 @flow(name="claim_status_classification_flow", log_prints=True)
 def main_flow():
@@ -221,15 +220,17 @@ def main_flow():
     X_train, X_test, y_train, y_test = create_train_test_datasets(df, target)
 
     print("Model training starting...")
-    run_id = train_model(X_train, y_train, X_test, y_test, artifact_path, reference_data_path)
-    
+    run_id = train_model(
+        X_train, y_train, X_test, y_test, artifact_path, reference_data_path
+    )
+
     print(f"Registering model {model_name} with run_id: {run_id}.")
     register_model(run_id, model_name, artifact_path)
     print(f"Registered model {model_name} with run_id: {run_id}.")
 
     stage_model(client, run_id, model_name)
     print(f"Staged model {model_name} with run_id: {run_id}.")
-    
+
 
 if __name__ == "__main__":
     main_flow()

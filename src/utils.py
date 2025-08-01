@@ -17,7 +17,7 @@ def load_config(file_path="config.yaml"):
 
 def read_dataframe(file_path, target, quick_train):
     df = pd.read_csv(file_path)
-    
+
     # Get categ and numeric columns
     categ_cols = [c for c in df.columns if df[c].dtype == 'object']
     num_cols = [c for c in df.columns if c not in categ_cols]

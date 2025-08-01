@@ -24,9 +24,7 @@ def read_dataframe(file_path, target, quick_train):
 @task(name="get_production_model", log_prints=True)
 def get_prod_model(client, model_name):
     # Get all registered models for model name
-    reg_models = client.search_registered_models(
-        filter_string=f"name='{model_name}'"
-    )
+    reg_models = client.search_registered_models(filter_string=f"name='{model_name}'")
 
     # Get production model run id and model id
     prod_model_run_id = None
@@ -35,13 +33,13 @@ def get_prod_model(client, model_name):
         for model_version in reg_model.latest_versions:
             if model_version.current_stage == 'Production':
                 prod_model_run_id = model_version.run_id
-                prod_model_model_id = model_version.source.replace('models:/', '') 
+                prod_model_model_id = model_version.source.replace('models:/', '')
                 break
 
     if prod_model_run_id:
         print(f"Production model run_id for {model_name}: {prod_model_run_id}")
         return prod_model_run_id, prod_model_model_id
-    else:   
+    else:
         print(f"No production model found for {model_name}.")
 
 
@@ -59,7 +57,7 @@ def apply_model(model, run_id, df, output_path):
 
     df['predicted_claim_status'] = model.predict(df)
     df['model_run_id'] = run_id
-    
+
     print(f"Saving the predictions to {output_path}...")
     df.to_csv(output_path, index=False)
 
@@ -96,10 +94,10 @@ def score_claim_status():
     df = read_dataframe(input_file_path, target, quick_train)
     # Sample the data for scoring
     df = df.sample(n=1000, random_state=42).drop(columns=[target])
-    
+
     print(f"Getting production model from registry...")
     run_id, model_id = get_prod_model(client, model_name)
-        
+
     print(f"Loading model with model_id = {model_id}...")
     model = load_model(model_id, experiment_id, bucket_name)
 
@@ -107,7 +105,9 @@ def score_claim_status():
     apply_model(model, run_id, df, output_file_path)
     print(f"Scored the data.")
 
-    s3_bucket_block.upload_from_path(from_path=output_file_path, to_path=output_file_path)
+    s3_bucket_block.upload_from_path(
+        from_path=output_file_path, to_path=output_file_path
+    )
     print(f"Uploaded the scored data in the S3 Bucket.")
     # Remove the local scored data
     os.remove(output_file_path)
