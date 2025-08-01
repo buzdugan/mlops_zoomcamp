@@ -70,6 +70,17 @@ deployments:
 
 
 # MONITORING FLOWS
+# metrics_calculation.py with model from the cloud
+- name: "batch_monitoring_backfill"
+  description: "Cloud version of batch_monitoring_backfill"
+  schedule:
+    cron: "00 07 * * *"
+    timezone: "Europe/London"
+  flow_name: "batch_monitoring_backfill_flow"
+  entrypoint: "metrics_calculation.py:batch_monitoring_backfill"
+  work_pool:
+    name: mlops_zoomcamp_pool
+
 # metrics_calculation_local.py running locally
 - name: "batch_monitoring_backfill_local"
   description: "Local version of batch_monitoring_backfill"
