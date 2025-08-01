@@ -110,6 +110,9 @@ def score_claim_status():
     cloud_output_file_path = f'{scored_data_path_prefix}_{yesterday_str}.csv'
     s3_bucket_block.upload_from_path(from_path=local_output_file_path, to_path=cloud_output_file_path)
     print(f"Uploaded the scored data in the S3 Bucket.")
+    # Remove the local scored data
+    os.remove(local_output_file_path)
+
 
 if __name__ == "__main__":
     score_claim_status()
