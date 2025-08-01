@@ -16,12 +16,12 @@ sys.path.append("src")
 import utils
 
 
-@task(name="read_data", retries=3, retry_delay_seconds=2)
+# @task(name="read_data", retries=3, retry_delay_seconds=2)
 def read_dataframe(file_path, target, quick_train):
     return utils.read_dataframe(file_path, target, quick_train)
 
 
-@task(name="get_production_model", log_prints=True)
+# @task(name="get_production_model", log_prints=True)
 def get_prod_model(client, model_name):
     # Get all registered models for model name
     reg_models = client.search_registered_models(
@@ -45,7 +45,7 @@ def get_prod_model(client, model_name):
         print(f"No production model found for {model_name}.")
 
 
-@task(name="load_model", log_prints=True)
+# @task(name="load_model", log_prints=True)
 def load_model(model_id, experiment_id, bucket_name):
     prod_model = f's3://{bucket_name}/{experiment_id}/models/{model_id}/artifacts/'
 
@@ -54,7 +54,7 @@ def load_model(model_id, experiment_id, bucket_name):
     return model
 
 
-@task(name="apply_model", log_prints=True)
+# @task(name="apply_model", log_prints=True)
 def apply_model(model, run_id, df, output_path):
 
     df['predicted_claim_status'] = model.predict(df)
@@ -62,10 +62,9 @@ def apply_model(model, run_id, df, output_path):
     
     print(f"Saving the predictions to {output_path}...")
     df.to_csv(output_path, index=False)
-    print(df.head(3))
 
 
-@flow(name="claim_status_scoring_flow", log_prints=True)
+# @flow(name="claim_status_scoring_flow", log_prints=True)
 def score_claim_status():
 
     config = utils.load_config(file_path="config.yaml")
@@ -89,9 +88,9 @@ def score_claim_status():
     # Define the input and output file paths
     yesterday = datetime.now() - timedelta(1)
     yesterday_str = yesterday.strftime('%Y_%m_%d')
+    scored_data_path_prefix = config['scored_data_path_prefix']
     input_file_path = Path(config['modelling_data_path'])
-    scored_data_path_prefix = Path(config['scored_data_path_prefix'])
-    output_file_path = Path(f"{scored_data_path_prefix}_{yesterday_str}.csv")
+    local_output_file_path = Path(f"{scored_data_path_prefix}_{yesterday_str}.csv")
 
     print(f"Reading data from {input_file_path}...")
     df = read_dataframe(input_file_path, target, quick_train)
@@ -105,9 +104,12 @@ def score_claim_status():
     model = load_model(model_id, experiment_id, bucket_name)
 
     print(f"Scoring the data using model with run_id = {run_id}...")
-    apply_model(model, run_id, df, output_file_path)
+    apply_model(model, run_id, df, local_output_file_path)
     print(f"Scored the data.")
 
+    cloud_output_file_path = f'{scored_data_path_prefix}_{yesterday_str}.csv'
+    s3_bucket_block.upload_from_path(from_path=local_output_file_path, to_path=cloud_output_file_path)
+    print(f"Uploaded the scored data in the S3 Bucket.")
 
 if __name__ == "__main__":
     score_claim_status()
