@@ -2,7 +2,6 @@
 # coding: utf-8
 
 import os
-import sys
 from pathlib import Path
 
 import mlflow
@@ -14,12 +13,9 @@ from prefect_aws import S3Bucket
 from scipy import stats
 from sklearn.datasets import *
 from sklearn.metrics import accuracy_score, average_precision_score, roc_auc_score
-from sklearn.model_selection import (
-    RandomizedSearchCV,
-    StratifiedKFold,
-    train_test_split,
-)
+from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold, train_test_split
 
+import sys
 sys.path.append("src")
 import utils
 
