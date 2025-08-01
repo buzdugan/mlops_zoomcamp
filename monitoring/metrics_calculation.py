@@ -1,3 +1,4 @@
+import os
 import datetime
 import time
 import random
@@ -17,6 +18,7 @@ import mlflow
 from mlflow.tracking import MlflowClient
 from prefect import flow, task
 from prefect.deployments import run_deployment
+from prefect_aws import S3Bucket
 
 import sys
 sys.path.append("src")
@@ -91,8 +93,8 @@ def get_prod_model(client, model_name):
 
 
 @task(name="load_model", log_prints=True)
-def load_model(model_id, experiment_id):
-    prod_model = f"mlartifacts/{experiment_id}/models/{model_id}/artifacts/"
+def load_model(model_id, experiment_id, bucket_name):
+    prod_model = f's3://{bucket_name}/{experiment_id}/models/{model_id}/artifacts/'
 
     print(f"Loading model from {prod_model}...")
     model = mlflow.pyfunc.load_model(prod_model)
@@ -163,17 +165,23 @@ async def batch_monitoring_backfill():
 	target = config['target']
 	prediction = config['prediction']
 	quick_train = config['quick_train']
+	bucket_name = config['bucket_name']
+	prefect_block_s3 = config['prefect_block_s3']
 
 	print("Connecting to mlflow registry server...")
 	client = MlflowClient(mlflow_tracking_uri)
 	experiment_id = client.get_experiment_by_name(experiment_name).experiment_id
 	print(f"Experiment ID for {experiment_name}: {experiment_id}")
 
+	os.environ["AWS_PROFILE"] = config['profile_name']  # AWS profile name
+	s3_bucket_block = S3Bucket.load(prefect_block_s3)
+	s3_bucket_block.download_folder_to_path(from_folder="data", to_folder="data")
+
 	# Identify and load Production model
 	print(f"Getting production model from registry...")
 	run_id, model_id = get_prod_model(client, model_name)
 	print(f"Loading model with model_id = {model_id}...")
-	model = load_model(model_id, experiment_id)
+	model = load_model(model_id, experiment_id, bucket_name)
 
 	input_file_path = Path(config['modelling_data_path'])
 	reference_data = load_reference_data(Path(config['reference_data_path']))
