@@ -7,6 +7,7 @@ modelling_data_path: "data/insurance_claims_data.csv"
 reference_data_path: "data/reference.parquet"
 scored_data_path_prefix: "data/scored_dataset"
 target: "claim_status"
+prediction: "predicted_claim_status"
 
 bucket_name: "mlflow-artifacts-remote-claims"
 prefect_block_aws: "mlops-aws-creds"
