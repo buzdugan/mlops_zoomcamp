@@ -26,6 +26,7 @@ xgboost = "==3.0.2"
 [dev-packages]
 ipykernel = "*"
 pytest = "*"
+pylint = "*"
 
 [requires]
 python_version = "3.12"
