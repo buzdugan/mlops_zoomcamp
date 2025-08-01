@@ -286,3 +286,29 @@ docker run -it \
 	-v ~/.aws:/root/.aws \
 	claim-status-scoring:v1 
 ```
+
+
+## Monitoring
+Evidently AI library is used for monitoring.
+Random data from the training set is used to simulate unseen data, then drift metrics are calculated at 5 random time intervals.
+
+To prepare PostgreSQL, Adminer and Grafana, run
+```bash
+docker compose -f .\monitoring\docker-compose.yml up --build -d
+```
+This can also be deployed to Amazon ECS.
+
+The local monitoring flow in prefect is loaded with
+```bash
+prefect deploy monitoring/metrics_calculation_local.py:batch_monitoring_backfill -n batch_monitoring_backfill_local -p mlops_zoomcamp_pool
+```
+
+The cloud monitoring flow in prefect is loaded with
+```bash
+prefect deploy monitoring/metrics_calculation.py:batch_monitoring_backfill -n batch_monitoring_backfill -p mlops_zoomcamp_pool
+```
+
+
+<p align="center">
+  <img width="90%" src="images/prefect_server_monitoring.png" alt="Prefect monitoring run">
+</p>
