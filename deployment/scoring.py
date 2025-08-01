@@ -90,7 +90,7 @@ def score_claim_status():
     yesterday_str = yesterday.strftime('%Y_%m_%d')
     scored_data_path_prefix = config['scored_data_path_prefix']
     input_file_path = Path(config['modelling_data_path'])
-    local_output_file_path = Path(f"{scored_data_path_prefix}_{yesterday_str}.csv")
+    output_file_path = Path(f"{scored_data_path_prefix}_{yesterday_str}.csv")
 
     print(f"Reading data from {input_file_path}...")
     df = read_dataframe(input_file_path, target, quick_train)
@@ -104,14 +104,13 @@ def score_claim_status():
     model = load_model(model_id, experiment_id, bucket_name)
 
     print(f"Scoring the data using model with run_id = {run_id}...")
-    apply_model(model, run_id, df, local_output_file_path)
+    apply_model(model, run_id, df, output_file_path)
     print(f"Scored the data.")
 
-    cloud_output_file_path = f'{scored_data_path_prefix}_{yesterday_str}.csv'
-    s3_bucket_block.upload_from_path(from_path=local_output_file_path, to_path=cloud_output_file_path)
+    s3_bucket_block.upload_from_path(from_path=output_file_path, to_path=output_file_path)
     print(f"Uploaded the scored data in the S3 Bucket.")
     # Remove the local scored data
-    os.remove(local_output_file_path)
+    os.remove(output_file_path)
 
 
 if __name__ == "__main__":
