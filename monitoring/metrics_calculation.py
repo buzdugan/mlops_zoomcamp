@@ -238,7 +238,7 @@ async def batch_monitoring_backfill():
 			logging.info("data sent")
 
 	# Clean up the pulled repo
-	repo_path = "mlops_zoomcamp-main"
+	repo_path = Path("mlops_zoomcamp-main")
 	if repo_path.exists() and repo_path.is_dir():
 		shutil.rmtree(repo_path)
 
