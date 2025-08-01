@@ -22,11 +22,11 @@ scikit-learn = "==1.7.0"
 xgboost = "==3.0.2"
 
 [dev-packages]
-black = "*"
 ipykernel = "*"
 isort = "*"
 pylint = "*"
 pytest = "*"
+black = "*"
 
 [requires]
 python_version = "3.12"
