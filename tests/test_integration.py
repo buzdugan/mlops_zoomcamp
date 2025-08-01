@@ -1,4 +1,5 @@
 import os
+import pytest
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -26,7 +27,7 @@ def check_s3_file_exists(bucket_name, object_key):
         return True
 
 
-def TestIntegration():
+def test_integration():
     config = utils.load_config(file_path="config.yaml")
     bucket_name = config['bucket_name']
     os.environ["AWS_PROFILE"] = config['profile_name']
@@ -34,8 +35,8 @@ def TestIntegration():
     # Define the input and output file paths
     yesterday = datetime.now() - timedelta(1)
     yesterday_str = yesterday.strftime('%Y_%m_%d')
-    scored_data_path_prefix = Path(config['scored_data_path_prefix'])
-    output_file_path = Path(f"{scored_data_path_prefix}_{yesterday_str}.csv")
+    scored_data_path_prefix = config['scored_data_path_prefix']
+    output_file_path = f"{scored_data_path_prefix}_{yesterday_str}.csv"
 
     scoring.score_claim_status()
 
@@ -50,4 +51,4 @@ def TestIntegration():
 
 
 if __name__ == '__main__':
-    TestIntegration()
+    pytest.main([__file__])
