@@ -1,22 +1,22 @@
-import os
 import datetime
-import time
-import logging 
-import pandas as pd
-import psycopg
+import logging
+import os
 import shutil
-
+import sys
+import time
 from pathlib import Path
-from evidently import DataDefinition, Dataset, Report
-from evidently.metrics import ValueDrift, DriftedColumnsCount, MissingValueCount
 
 import mlflow
+import pandas as pd
+import psycopg
+from evidently import DataDefinition, Dataset, Report
+from evidently.metrics import (DriftedColumnsCount, MissingValueCount,
+                               ValueDrift)
 from mlflow.tracking import MlflowClient
 from prefect import flow, task
 from prefect.deployments import run_deployment
 from prefect_aws import S3Bucket
 
-import sys
 sys.path.append("src")
 import utils
 

@@ -1,16 +1,17 @@
 import os
-import pytest
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
 import boto3
+import pytest
 from botocore.exceptions import ClientError
 
-import sys
 sys.path.append("src")
 sys.path.append("deployment")
-import utils
 import scoring
+
+import utils
 
 
 def check_s3_file_exists(bucket_name, object_key):

@@ -2,15 +2,15 @@
 # coding: utf-8
 
 import os
-from pathlib import Path
+import sys
 from datetime import datetime, timedelta
+from pathlib import Path
 
-import pandas as pd
 import mlflow
+import pandas as pd
 from mlflow.tracking import MlflowClient
 from prefect import flow, task
 
-import sys
 sys.path.append("src")
 import utils
 

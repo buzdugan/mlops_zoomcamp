@@ -1,20 +1,21 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import sys
 from pathlib import Path
 
+import mlflow
 import pandas as pd
 import xgboost as xgb
-from scipy import stats
-from sklearn.datasets import *
-from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_score
-from sklearn.model_selection import train_test_split, RandomizedSearchCV, StratifiedKFold
-
-import mlflow
 from mlflow.tracking import MlflowClient
 from prefect import flow, task
+from scipy import stats
+from sklearn.datasets import *
+from sklearn.metrics import (accuracy_score, average_precision_score,
+                             roc_auc_score)
+from sklearn.model_selection import (RandomizedSearchCV, StratifiedKFold,
+                                     train_test_split)
 
-import sys
 sys.path.append("src")
 import utils
 

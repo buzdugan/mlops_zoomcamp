@@ -1,7 +1,8 @@
-from time import sleep
-from prefect_aws import S3Bucket, AwsCredentials
-
 import sys
+from time import sleep
+
+from prefect_aws import AwsCredentials, S3Bucket
+
 sys.path.append("src")
 import utils
 

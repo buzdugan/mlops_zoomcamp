@@ -1,8 +1,9 @@
-import pytest
-import pandas as pd
+import sys
 from pathlib import Path
 
-import sys
+import pandas as pd
+import pytest
+
 sys.path.append("src")
 import utils
 
