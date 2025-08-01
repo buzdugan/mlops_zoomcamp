@@ -13,7 +13,7 @@ def create_aws_creds_block(prefect_block_aws, profile_name):
     aws_creds_block_obj.save(prefect_block_aws, overwrite=True)
 
 
-def create_s3_bucket_block(bucket_name, prefect_block_aws):
+def create_s3_bucket_block(bucket_name, prefect_block_aws, prefect_block_s3):
     aws_creds = AwsCredentials.load(prefect_block_aws)
     my_s3_bucket_obj = S3Bucket(
         bucket_name=bucket_name, 
