@@ -156,7 +156,8 @@ def calculate_metrics_postgresql(curr, i, unseen_df, reference_data, file_path, 
 
 
 @flow(name="batch_monitoring_backfill_flow", log_prints=True)
-async def batch_monitoring_backfill():
+# async 
+def batch_monitoring_backfill():
 
 	config = utils.load_config(file_path="config.yaml")
 	mlflow_tracking_uri = config['deployment']['cloud']['mlflow_tracking_uri']
@@ -211,22 +212,22 @@ async def batch_monitoring_backfill():
 					curr, i, unseen_df, reference_data, input_file_path, target, quick_train, prediction
 					)
 
-			if result['metrics'][0]['value'] >= 0.5:
-				print("Drift detected, retraining model...")
+			# if result['metrics'][0]['value'] >= 0.5:
+			# 	print("Drift detected, retraining model...")
 				
-				try:
-					flow_run = await run_deployment(
-						name="claim_status_classification_flow_local/claims_status_classification_local",
-						timeout=0
-					)
-					print(f"Successfully triggered retraining: {flow_run.id}")
-				except Exception as e:
-					print(f"Failed to trigger retraining: {e}")
-					raise
+			# 	try:
+			# 		flow_run = await run_deployment(
+			# 			name="claim_status_classification_flow_local/claims_status_classification_local",
+			# 			timeout=0
+			# 		)
+			# 		print(f"Successfully triggered retraining: {flow_run.id}")
+			# 	except Exception as e:
+			# 		print(f"Failed to trigger retraining: {e}")
+			# 		raise
 
-				break
-			else:
-				print("No drift was detected.")
+			# 	break
+			# else:
+			# 	print("No drift was detected.")
 
 			new_send = datetime.datetime.now()
 			seconds_elapsed = (new_send - last_send).total_seconds()
