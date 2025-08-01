@@ -27,6 +27,7 @@ isort = "*"
 pylint = "*"
 pytest = "*"
 black = "*"
+pre-commit = "*"
 
 [requires]
 python_version = "3.12"
