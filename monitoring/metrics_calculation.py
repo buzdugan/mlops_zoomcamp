@@ -9,6 +9,7 @@ import pandas as pd
 import io
 import psycopg
 import joblib
+import shutil
 
 from pathlib import Path
 from evidently import DataDefinition, Dataset, Report
@@ -211,7 +212,7 @@ async def batch_monitoring_backfill():
 					curr, i, unseen_df, reference_data, input_file_path, target, quick_train, prediction
 					)
 
-			if result['metrics'][0]['value'] >= 0.5:
+			if result['metrics'][0]['value'] >= 0.0:
 				print("Drift detected, retraining model...")
 				
 				try:
@@ -235,6 +236,11 @@ async def batch_monitoring_backfill():
 			while last_send < new_send:
 				last_send = last_send + datetime.timedelta(seconds=10)
 			logging.info("data sent")
+
+	# Clean up the pulled repo
+	repo_path = "mlops_zoomcamp-main"
+	if repo_path.exists() and dirpath.is_dir():
+		shutil.rmtree(repo_path)
 
 
 if __name__ == '__main__':
