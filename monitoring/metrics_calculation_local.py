@@ -41,11 +41,9 @@ CONNECTION_STRING = "host=localhost port=5432 user=postgres password=example"
 CONNECTION_STRING_DB = CONNECTION_STRING + " dbname=test"
 
 
-# @task(name="get_num_cat_features", log_prints=True)
+@task(name="get_num_cat_features", log_prints=True)
 def get_num_cat_features(file_path, target, quick_train):
 	df = utils.read_dataframe(file_path, target, quick_train)
-	print(f"Training data...{df.shape}")
-	print(df.columns)
 
 	# Get categ and numeric columns
 	categ_cols = [c for c in df.columns if df[c].dtype == 'category']
@@ -55,23 +53,20 @@ def get_num_cat_features(file_path, target, quick_train):
 	return num_cols, categ_cols
 
 
-# @task(name="load_reference_data", log_prints=True)
+@task(name="load_reference_data", log_prints=True)
 def load_reference_data(file_path):
 	df = pd.read_parquet(file_path)
-	print(f"Reference data...{df.shape}")
-	print(df.columns)
-	print(df['predicted_claim_status'].value_counts())
 	return df
 
 
-# @task(name="create_unseen_data", log_prints=True)
+@task(name="create_unseen_data", log_prints=True)
 def create_unseen_data(file_path, random_state, target, quick_train):
 	df = utils.read_dataframe(file_path, target, quick_train)
     # Sample the data for monitoring
 	return df.sample(n=1000, random_state=random_state)
 
 
-# @task(name="get_prod_model", log_prints=True)
+@task(name="get_prod_model", log_prints=True)
 def get_prod_model(client, model_name):
     # Get all registered models for model name
     reg_models = client.search_registered_models(
@@ -95,7 +90,7 @@ def get_prod_model(client, model_name):
         print(f"No production model found for {model_name}.")
 
 
-# @task(name="load_model", log_prints=True)
+@task(name="load_model", log_prints=True)
 def load_model(model_id, experiment_id):
     prod_model = f"mlartifacts/{experiment_id}/models/{model_id}/artifacts/"
 
@@ -104,14 +99,14 @@ def load_model(model_id, experiment_id):
     return model
 
 
-# @task(name="apply_model_to_data", log_prints=True)
+@task(name="apply_model_to_data", log_prints=True)
 def apply_model_to_data(model, run_id, df):
 	df['predicted_claim_status'] = model.predict(df)
 	df['model_run_id'] = run_id
 	return df
 
 
-# @task(name="prep_db", log_prints=True)
+@task(name="prep_db", log_prints=True)
 def prep_db():
 	with psycopg.connect("host=localhost port=5432 user=postgres password=example", autocommit=True) as conn:
 		res = conn.execute("SELECT 1 FROM pg_database WHERE datname='test'")
@@ -121,7 +116,7 @@ def prep_db():
 			conn.execute(CREATE_TABLE_STATEMENT)
 
 
-# @task(name="calculate_metrics_postgresql", log_prints=True)
+@task(name="calculate_metrics_postgresql", log_prints=True)
 def calculate_metrics_postgresql(curr, i, unseen_df, reference_data, file_path, target, quick_train, prediction):
 
 	begin = datetime.datetime(2025, 7, 1, 0, 0)
@@ -158,9 +153,8 @@ def calculate_metrics_postgresql(curr, i, unseen_df, reference_data, file_path, 
 	return result
 
 
-# @flow(name="batch_monitoring_backfill_flow_local", log_prints=True)
-# async 
-def batch_monitoring_backfill():
+@flow(name="batch_monitoring_backfill_flow_local", log_prints=True)
+async def batch_monitoring_backfill():
 
 	config = utils.load_config(file_path="config.yaml")
 	mlflow_tracking_uri = config['deployment']['local']['mlflow_tracking_uri']
@@ -208,22 +202,23 @@ def batch_monitoring_backfill():
 				result = calculate_metrics_postgresql(
 					curr, i, unseen_df, reference_data, input_file_path, target, quick_train, prediction
 					)
-				print(f"result['metrics'][0]['value'] = {result['metrics'][0]['value']}")
 
-			# if result['metrics'][0]['value'] >= 0.02:
-			# 	print(f"Drift detected, retraining model...")
+			if result['metrics'][0]['value'] >= 0.5:
+				print("Drift detected, retraining model...")
 				
-			# 	try:
-			# 		flow_run = await run_deployment(
-			# 			name="claim_status_classification_flow_local/claims_status_classification_local",
-			# 			timeout=0
-			# 		)
-			# 		print(f"Successfully triggered retraining: {flow_run.id}")
-			# 	except Exception as e:
-			# 		print(f"Failed to trigger retraining: {e}")
-			# 		raise
+				try:
+					flow_run = await run_deployment(
+						name="claim_status_classification_flow_local/claims_status_classification_local",
+						timeout=0
+					)
+					print(f"Successfully triggered retraining: {flow_run.id}")
+				except Exception as e:
+					print(f"Failed to trigger retraining: {e}")
+					raise
 
-			# 	break
+				break
+			else:
+				print("No drift was detected.")
 
 			new_send = datetime.datetime.now()
 			seconds_elapsed = (new_send - last_send).total_seconds()
