@@ -174,7 +174,7 @@ async def batch_monitoring_backfill():
 	print(f"Experiment ID for {experiment_name}: {experiment_id}")
 
 	os.environ["AWS_PROFILE"] = config['profile_name']  # AWS profile name
-	s3_bucket_block = S3Bucket.load(prefect_block_s3)
+	s3_bucket_block = await S3Bucket.load(prefect_block_s3)
 	s3_bucket_block.download_folder_to_path(from_folder="data", to_folder="data")
 
 	# Identify and load Production model
