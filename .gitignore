@@ -22,5 +22,6 @@ __pycache__
 
 # sketch files
 *sketch*
-# config files
-config.json
+
+# local git cloning by prefect
+mlops_zoomcamp-main
