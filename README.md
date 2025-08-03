@@ -3,11 +3,11 @@ This repository is the final project for the MLOps Zoomcamp.
 
 
 # Problem Description
-The project demonstrates the data and modelling pipelines built based on the main aspects of MLOps, such as modelling experimentation and tracking, model registry, workflow orchestration, model deployment and monitoring. 
+The project demonstrates the data and modelling pipelines built based on the main aspects of MLOps, such as modelling experimentation and tracking, model registry, workflow orchestration, model deployment and monitoring.
 
 
 # Problem Statement and Objective
-The objective is to simulate a production-ready MLOps pipeline where 
+The objective is to simulate a production-ready MLOps pipeline where
 - a model is trained at the start of every month with data up to and including the previous month
 - the applications received daily are scored as a batch job every night and used for filtering out risky customers and help manage the reserve that the business needs to hold.
 
@@ -29,7 +29,7 @@ The order of the pipeline is as follows:
 
 
 ## Data Collection
-The data used for this project was downloaded from Kaggle [Insurance Claims Dataset](https://www.kaggle.com/datasets/litvinenko630/insurance-claims?resource=download) and stored in the data folder. It has 58,592 rows with information about customers and their claim status. 
+The data used for this project was downloaded from Kaggle [Insurance Claims Dataset](https://www.kaggle.com/datasets/litvinenko630/insurance-claims?resource=download) and stored in the data folder. It has 58,592 rows with information about customers and their claim status.
 The model built for this project asses the risk associated with insuring a particular policyholder based on their characteristics and historical claim behavior, predicting the likelihood of a customer claiming.
 A data dictionary can be found [here](https://www.kaggle.com/datasets/litvinenko630/insurance-claims/data).
 
@@ -40,7 +40,7 @@ I started experimenting with a local version of MLFlow and Prefect with code fro
 - read dataframe from csv file
 - create train test datasets
 - hyperparameter tuning
-- train the model with the best hyperparameters 
+- train the model with the best hyperparameters
 - register the model to MLFlow model registry
 - stage the model to Production if no model exists already or if the AUC PR score is better then the current Production model
 
@@ -53,7 +53,7 @@ The current model orchestration can be done in a local Prefect server or on Pref
 
 
 # Steps to Replicate the Project - Version 1. Run locally
-For the purpose of testing the scoring_local.py script locally with Prefect, you will need to fork this repo and push your own **mlartifacts** folder that gets generated after the model train to the repo. 
+For the purpose of testing the scoring_local.py script locally with Prefect, you will need to fork this repo and push your own **mlartifacts** folder that gets generated after the model train to the repo.
 This is because Prefect pulls the code from the github repo and needs all the data and artifacts there.
 
 - Setup the Local Environment
@@ -76,7 +76,7 @@ pipenv install -r requirements.txt
 mlflow ui --backend-store-uri sqlite:///mlflow.db
 ```
 Go to http://127.0.0.1:5000 to access the server.
-If we don't specify a local path to the model artifacts, by default MLFlow will save the experiment and runs in the local folder in 
+If we don't specify a local path to the model artifacts, by default MLFlow will save the experiment and runs in the local folder in
 **mlartifacts/<experiment_id>/<run_id>/artifacts/**.
 
 ## Run the Prefect Server
@@ -88,7 +88,7 @@ prefect server start
 Go to http://127.0.0.1:4200 to access the server.
 
 ## Create and Run the Training Deployment
-Open a new terminal and activate the virtual environment. First create a new work pool and then the deployment. 
+Open a new terminal and activate the virtual environment. First create a new work pool and then the deployment.
 ```bash
 pipenv shell
 
@@ -111,12 +111,12 @@ prefect deployment run 'claim_status_classification_flow_local/claims_status_cla
 
 
 You can run the deployment again either from the terminal or from the UI.
-This will create a new model that will be compared to the existing one and the worst one will be Archived. 
+This will create a new model that will be compared to the existing one and the worst one will be Archived.
 <p align="center">
   <img width="90%" src="images/mlflow_training_local_registry.png" alt="MLFlow training_local registry 1">
 </p>
 
-After you've run the training deployment, push the **mlartifacts** folder that got generated to the repo. 
+After you've run the training deployment, push the **mlartifacts** folder that got generated to the repo.
 This is because Prefect pulls the code from the github repo and needs all the data and artifacts there in order to find the model for scoring.
 
 
@@ -134,7 +134,7 @@ prefect deployment run 'claim_status_scoring_flow_local/claims_status_scoring_lo
 <p align="center">
   <img width="90%" src="images/prefect_server_scoring_local.png" alt="Prefect scoring_local run">
 </p>
-At this point the flow for scoring will run, and it will create a new datasets scored_dataset_<today_date>.csv inside the temporary storage in Prefect. 
+At this point the flow for scoring will run, and it will create a new datasets scored_dataset_<today_date>.csv inside the temporary storage in Prefect.
 
 
 # Steps to Replicate the Project - Version 2. Run partially in the Cloud
@@ -189,7 +189,7 @@ Check to see that you have access to the S3 bucket by running `aws s3 ls`.
 
 
 ## Setup the Local Environment
-### Create AWS profile 
+### Create AWS profile
 You will need to create an aws profile name on your local computer that requires access key credentials. Run
 ```bash
 pip install awscli
@@ -217,7 +217,7 @@ mlflow server -h 0.0.0.0 -p 5000 --backend-store-uri postgresql://DB_USER:DB_PAS
 The MLFlow UI will be available at `http://<ec2_public_address>:5000`.
 
 ### Version 1 - Launch the Prefect server locally
-For Prefect to access the S3 Bucket, we need to first create an  AWS credential block and an S3 Bucket block. Run 
+For Prefect to access the S3 Bucket, we need to first create an  AWS credential block and an S3 Bucket block. Run
 ```bash
 python create_s3_bucket_block.py
 ```
@@ -250,7 +250,7 @@ In the browser, create an API key, then run the below to authenticate to a `<use
 ```bash
 prefect cloud login -k <api_key>
 ```
-You can check the authentication with 
+You can check the authentication with
 ```bash
 prefect config view
 ```
@@ -270,7 +270,7 @@ This will deploy to your Prefect Cloud workspace and use the registered S3 block
 ## Run the Scoring
 The daily scoring can be run as a deployment on the local Prefect server, similar to the training, or it can be run locally in a docker container.
 
-For the Prefect deployment, run 
+For the Prefect deployment, run
 ```bash
 prefect deploy deployment/scoring.py:score_claim_status -n claims_status_scoring -p mlops_zoomcamp_pool
 prefect worker start -p mlops_zoomcamp_pool
@@ -284,7 +284,7 @@ Then run the docker image to create a parquet prediction file on the S3 bucket.
 ```bash
 docker run -it \
 	-v ~/.aws:/root/.aws \
-	claim-status-scoring:v1 
+	claim-status-scoring:v1
 ```
 
 
@@ -312,3 +312,9 @@ prefect deploy monitoring/metrics_calculation.py:batch_monitoring_backfill -n ba
 <p align="center">
   <img width="90%" src="images/prefect_server_monitoring.png" alt="Prefect monitoring run">
 </p>
+
+
+
+# Best practices
+### Pre-commit hooks
+Run `pre-commit install` to create the pre-commit hooks in `.git/hooks/pre-commit`.

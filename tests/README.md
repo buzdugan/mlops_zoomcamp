@@ -10,6 +10,5 @@ Then run the docker image to create a scored file for yesterday's date on the S3
 ```bash
 docker run -it \
 	-v ~/.aws:/root/.aws \
-	integration-test:v1 
+	integration-test:v1
 ```
-

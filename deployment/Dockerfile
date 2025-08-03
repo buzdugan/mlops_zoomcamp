@@ -3,7 +3,7 @@
 FROM python:3.12
 
 RUN pip install -U pip
-RUN pip install pipenv 
+RUN pip install pipenv
 
 WORKDIR /app
 
