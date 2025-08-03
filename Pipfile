@@ -25,9 +25,9 @@ xgboost = "==3.0.2"
 ipykernel = "*"
 isort = "*"
 pylint = "*"
-pytest = "*"
 black = "*"
 pre-commit = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.12"
