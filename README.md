@@ -327,3 +327,7 @@ docker run -it \
 
 ### Pre-commit hooks
 Run `pre-commit install` to create the pre-commit hooks in `.git/hooks/pre-commit`.
+
+
+### Makefile
+A `Makefile` was created as best practice.
