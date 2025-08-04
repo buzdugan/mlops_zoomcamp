@@ -10,6 +10,7 @@ artifacts_aws/
 
 # scored data
 data/scored_*
+data/reference.parquet
 
 # notebook checkpoints
 .ipynb_checkpoints
