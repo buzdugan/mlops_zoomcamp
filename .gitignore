@@ -4,7 +4,7 @@
 # mlflow artifacts locally
 # models/
 mlruns/
-# mlartifacts/
+mlartifacts/
 mlflow.db
 artifacts_aws/
 

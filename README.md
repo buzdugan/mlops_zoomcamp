@@ -2,6 +2,7 @@
 This repository is the final project for the MLOps Zoomcamp.
 
 
+
 # Problem Description
 The project demonstrates the data and modelling pipelines built based on the main aspects of MLOps, such as modelling experimentation and tracking, model registry, workflow orchestration, model deployment and monitoring.
 
@@ -17,7 +18,7 @@ The objective is to simulate a production-ready MLOps pipeline where
 - MLFlow for model experimentation, tracking, and registry
 - Prefect for workflow orchestration
 - AWS for cloud infrastructure: EC2 instance, RDS database and S3 bucket
-- docker for deployment (daily scoring)
+- docker for deployment (simulated daily scoring)
 
 
 # Steps Overview
@@ -32,24 +33,6 @@ The order of the pipeline is as follows:
 The data used for this project was downloaded from Kaggle [Insurance Claims Dataset](https://www.kaggle.com/datasets/litvinenko630/insurance-claims?resource=download) and stored in the data folder. It has 58,592 rows with information about customers and their claim status.
 The model built for this project asses the risk associated with insuring a particular policyholder based on their characteristics and historical claim behavior, predicting the likelihood of a customer claiming.
 A data dictionary can be found [here](https://www.kaggle.com/datasets/litvinenko630/insurance-claims/data).
-
-
-## Model Experimentation and Tracking
-I started experimenting with a local version of MLFlow and Prefect with code from python script model_training/training_local.py, which has the following steps:
-- connect to MLFlow tracking server
-- read dataframe from csv file
-- create train test datasets
-- hyperparameter tuning
-- train the model with the best hyperparameters
-- register the model to MLFlow model registry
-- stage the model to Production if no model exists already or if the AUC PR score is better then the current Production model
-
-Amazon EC2, Amazon RDS and Amazon S3 were setup to host the MLFlow tracking server, to store MLFlow metadata and artifacts respectively.
-In the final version of the code, the data used for training is also stored in the same S3 bucket.
-
-
-## Model Orchestration
-The current model orchestration can be done in a local Prefect server or on Prefect Cloud.
 
 
 # Steps to Replicate the Project - Version 1. Run locally
