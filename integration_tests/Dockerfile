@@ -10,6 +10,7 @@ WORKDIR /app
 COPY ["Pipfile", "Pipfile.lock", "./"]
 
 RUN pipenv install --system --deploy
+RUN pipenv install --dev
 
 COPY ["config.yaml", "src/utils.py", "create_s3_bucket_block.py", "deployment/scoring.py", "./"]
 COPY ["integration_tests/test_integration.py", "./"]
