@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
 if [ "${LOCAL_IMAGE_NAME}" == "" ]; then 
-    # LOCAL_TAG=`date +"%Y-%m-%d-%H-%M"`
-    LOCAL_TAG="v2"
+    LOCAL_TAG=`date +"%Y-%m-%d-%H-%M"`
     export LOCAL_IMAGE_NAME="claim-status-scoring:${LOCAL_TAG}"
     echo "LOCAL_IMAGE_NAME is not set, building a new image with tag ${LOCAL_IMAGE_NAME}"
     docker build -f deployment/Dockerfile -t ${LOCAL_IMAGE_NAME} .
@@ -10,7 +9,7 @@ else
     echo "no need to build image ${LOCAL_IMAGE_NAME}"
 fi
 
-sleep 5
+sleep 300
 docker run -it \
 	-v ~/.aws:/root/.aws \
 	${LOCAL_IMAGE_NAME}
