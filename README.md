@@ -308,13 +308,34 @@ The cloud monitoring flow in prefect is loaded with
 prefect deploy monitoring/metrics_calculation.py:batch_monitoring_backfill -n batch_monitoring_backfill -p mlops_zoomcamp_pool
 ```
 
-
 <p align="center">
   <img width="90%" src="images/prefect_server_monitoring.png" alt="Prefect monitoring run">
+</p>
+
+Daily data was simulated for 5 consecutive days.
+<p align="center">
+  <img width="90%" src="images/adminer_monitoring.png" alt="Prefect training_local run">
 </p>
 
 
 
 # Best practices
+### Unit tests
+The `test` folder contains unit tests and integration tests.
+Run the tests from the terminal with `pytest`.
+
+### Integration tests
+The integration tests can be run in a docker container. First we need to build the docker image with
+```bash
+docker build -f integration_tests/Dockerfile -t integration-test:v1 .
+```
+
+Then run the docker image to create a scored file for yesterday's date on the S3 bucket.
+```bash
+docker run -it \
+	-v ~/.aws:/root/.aws \
+	integration-test:v1
+```
+
 ### Pre-commit hooks
 Run `pre-commit install` to create the pre-commit hooks in `.git/hooks/pre-commit`.
