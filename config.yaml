@@ -21,4 +21,4 @@ deployment:
     mlflow_tracking_uri: "http://ec2-34-227-191-91.compute-1.amazonaws.com:5000"
 
 # TODO: set to False for final training
-quick_train: True
+quick_train: False
