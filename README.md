@@ -314,7 +314,12 @@ prefect deploy monitoring/metrics_calculation.py:batch_monitoring_backfill -n ba
 
 Daily data was simulated for 5 consecutive days.
 <p align="center">
-  <img width="90%" src="images/adminer_monitoring.png" alt="Prefect training_local run">
+  <img width="90%" src="images/adminer_monitoring.png" alt="Adminer drift metrics">
+</p>
+
+A Grafana Metrics Drift Dashboard was created with the drifted metrics.
+<p align="center">
+  <img width="90%" src="images/grafana_dashboard.png" alt="Grafana dashboard">
 </p>
 
 
