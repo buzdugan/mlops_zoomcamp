@@ -120,7 +120,7 @@ prefect deployment run 'claim_status_scoring_flow_local/claims_status_scoring_lo
 At this point the flow for scoring will run, and it will create a new datasets scored_dataset_<today_date>.csv inside the temporary storage in Prefect.
 
 
-# Steps to Replicate the Project - Version 2. Run partially in the Cloud
+# Steps to Replicate the Project - Version 2. Run in the Cloud
 - Setup the Cloud Environment
 - Setup the Local Environment
 - Run the Training
